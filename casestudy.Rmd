@@ -1,0 +1,327 @@
+---
+title: "DS6306_CaseStudy02"
+author: "Rudranil Mitra"
+date: "8/14/2020"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(caret)
+library(class)
+library(dplyr)
+library(e1071)
+library(FNN) 
+library(gmodels) 
+library(psych)
+library(epiR)
+library(DMwR)
+```
+
+
+```{r}
+# Load attrition dataset with labels
+attrition_dataset = read.csv('D:\\SMU_MSDS\\MSDS_6306_Doing-Data-Science\\Unit 14 and 15 Case Study 2\\CaseStudy2-data.csv')
+# Load attrition dataset without labels 
+attrition_dataset_wl = read.csv('D:\\SMU_MSDS\\MSDS_6306_Doing-Data-Science\\Unit 14 and 15 Case Study 2\\CaseStudy2CompSet No Attrition.csv')
+# 
+attrition_dataset_lm = attrition_dataset
+```
+
+### Does mean age differ significantly among Attrition Groups 
+```{r}
+# Execute the t-test between two groups, we are assuming that the variances are not equal
+fit = t.test(
+  attrition_dataset[attrition_dataset['Attrition']=='No',]$Age,
+  attrition_dataset[attrition_dataset['Attrition']=='Yes',]$Age,
+  var.equal = FALSE)
+# P-value is less than the significance level(0.05), so we can reject the null hypothesis and say that mean age is different between two groups
+fit$p.value
+# Looking at the confidence intervals we can suggest that individuals who are  not leaving the company have higher mean age than the individuals who leave the company
+fit$conf.int
+attrition_dataset %>% ggplot(mapping=aes(x=Age,y=Attrition,fill=Attrition)) + 
+  geom_boxplot() + 
+  annotate("text",x=40,y=2.5,label=paste0('P-value=',round(fit$p.value,4))) + 
+  ggtitle('Distribution of Age between two Attrition Groups')
+
+```
+### Does median monthly income differ significantly among Attrition Groups 
+```{r}
+# Execute the t-test between two groups, we are assuming that the variances are not equal
+fit = t.test(
+  log(attrition_dataset[attrition_dataset['Attrition']=='No',]$MonthlyIncome),
+  log(attrition_dataset[attrition_dataset['Attrition']=='Yes',]$MonthlyIncome),
+  var.equal = FALSE)
+# P-value is less than the significance level(0.05), so we can reject the null hypothesis and say that median monthly income is different between two groups
+fit$p.value
+# Looking at the confidence intervals(confidence intervals are in the log scale) we can suggest that individuals who are  not leaving the company have higher median monthly income than the individuals who leave the company. So monthly income is a significant reason for leaving the company
+# The lower bound of the increase between two groups is 27% 
+round(exp(fit$conf.int[1])-1,2)
+# The upper bound of the increase between two groups is 60%
+round(exp(fit$conf.int[2])-1,2)
+attrition_dataset %>% ggplot(mapping=aes(x=MonthlyIncome,y=Attrition,fill=Attrition)) + 
+  geom_boxplot() + 
+  annotate("text",x=15000,y=2.5,label=paste0('P-value=',round(fit$p.value,4))) + 
+  ggtitle('Distribution of Monthly Income between two Attrition Groups')
+
+
+```
+
+
+### Does mean distance from home differ significantly among Attrition Groups 
+```{r}
+# Execute the t-test between two groups, we are assuming that the variances are not equal
+fit = t.test(
+  attrition_dataset[attrition_dataset['Attrition']=='No',]$DistanceFromHome,
+  attrition_dataset[attrition_dataset['Attrition']=='Yes',]$DistanceFromHome,
+  var.equal = FALSE)
+# P-value is less than the significance level(0.05), so we can reject the null hypothesis and say that mean distance from home is different between two groups
+fit$p.value
+# Looking at the confidence intervals we can suggest that individuals who are not leaving the company are staying close to home than the individuals who are leaving the company
+fit$conf.int
+attrition_dataset %>% ggplot(mapping=aes(x=DistanceFromHome,y=Attrition,fill=Attrition)) + 
+  geom_boxplot() + 
+  annotate("text",x=10,y=2.5,label=paste0('P-value=',round(fit$p.value,4))) + 
+  ggtitle('Distribution of Distance From Home between two Attrition Groups')
+
+```
+## Does mean total working years differ significantly among Attrition Groups 
+```{r}
+# Execute the t-test between two groups, we are assuming that the variances are not equal
+fit = t.test(
+  attrition_dataset[attrition_dataset['Attrition']=='No',]$TotalWorkingYears,
+  attrition_dataset[attrition_dataset['Attrition']=='Yes',]$TotalWorkingYears,
+  var.equal = FALSE)
+# P-value is less than the significance level(0.05), so we can reject the null hypothesis and say that mean total working years is different between two groups
+fit$p.value
+attrition_dataset %>% ggplot(mapping=aes(x=DistanceFromHome,y=Attrition,fill=Attrition)) + 
+  geom_boxplot() + 
+    annotate("text",x=20,y=2.5,label=paste0('P-value=',round(fit$p.value,4))) + 
+  ggtitle('Distribution of Total Working Years between two Attrition Groups')
+
+```
+
+## Does mean total years working at the company different significantly among Attrition Groups
+```{r}
+# Execute the t-test between two groups, we are assuming that the variances are not equal
+fit = t.test(
+  attrition_dataset[attrition_dataset['Attrition']=='No',]$YearsAtCompany,
+  attrition_dataset[attrition_dataset['Attrition']=='Yes',]$YearsAtCompany,
+  var.equal = FALSE)
+# P-value is less than the significance level(0.05), so we can reject the null hypothesis and say that mean years at current company is different between two groups
+fit$p.value
+attrition_dataset %>% ggplot(mapping=aes(x=DistanceFromHome,y=Attrition,fill=Attrition)) + 
+  geom_boxplot() + 
+  annotate("text",x=20,y=2.5,label=paste0('P-value=',round(fit$p.value,4))) + 
+  ggtitle('Distribution of Years at Current company between two Attrition Groups')
+
+```
+## Run categorical tests to check whether those variables are associated with attrition
+```{r}
+fit=chisq.test(table(attrition_dataset$BusinessTravel,attrition_dataset$Attrition))
+barplot(table(attrition_dataset$Attrition,attrition_dataset$BusinessTravel),
+        col = c("green","red"),
+        main=paste0('Attrition by Business Travel, p-value=',round(fit$p.value,4)),
+        xlab='Business Travel Class') 
+legend("topleft",c("Attrition - Yes","Attrition - No"),fill = c("red","green"))
+
+
+fit=chisq.test(table(attrition_dataset$Department,attrition_dataset$Attrition))
+barplot(table(attrition_dataset$Attrition,attrition_dataset$Department),
+        col = c("green","red"),
+        main=paste0('Attrition by Department, p-value=',round(fit$p.value,4)),
+        xlab='Department') 
+legend("topleft",c("Attrition - Yes","Attrition - No"),fill = c("red","green"))
+
+fit=chisq.test(table(attrition_dataset$EducationField,attrition_dataset$Attrition))
+barplot(table(attrition_dataset$Attrition,attrition_dataset$EducationField),
+        col = c("green","red"),
+        main=paste0('Attrition by Education Field, p-value=',round(fit$p.value,4)),
+        xlab='Education Field') 
+legend("topleft",c("Attrition - Yes","Attrition - No"),fill = c("red","green"))
+
+fit=chisq.test(table(attrition_dataset$Gender,attrition_dataset$Attrition))
+barplot(table(attrition_dataset$Attrition,attrition_dataset$Gender),
+        col = c("green","red"),
+        main=paste0('Attrition by Gender, p-value=',round(fit$p.value,4)),
+        xlab='Gender') 
+legend("topleft",c("Attrition - Yes","Attrition - No"),fill = c("red","green"))
+
+fit=chisq.test(table(attrition_dataset$JobRole,attrition_dataset$Attrition))
+barplot(table(attrition_dataset$Attrition,attrition_dataset$JobRole),
+        col = c("green","red"),
+        main=paste0('Attrition by JobRole, p-value=',round(fit$p.value,4)),
+        xlab='Job Role') 
+legend("topleft",c("Attrition - Yes","Attrition - No"),fill = c("red","green"))
+
+fit=chisq.test(table(attrition_dataset$MaritalStatus,attrition_dataset$Attrition))
+barplot(table(attrition_dataset$Attrition,attrition_dataset$MaritalStatus),
+        col = c("green","red"),
+        main=paste0('Attrition by Marital Status, p-value=',round(fit$p.value,4)),
+        xlab='Marital Status') 
+legend("topleft",c("Attrition - Yes","Attrition - No"),fill = c("red","green"))
+```
+
+## Convert categorical variables by using dummy encoding 
+```{r}
+clean_wrangle_dataset = function(df,test){
+  ##
+  input_dataset = df
+  ##
+  if(test==0){
+    input_dataset$Attrition = as.factor(input_dataset$Attrition)  
+  }
+  ##
+  input_dataset$BusinessTravel = as.factor(input_dataset$BusinessTravel)
+  input_dataset$Department = as.factor(input_dataset$Department)
+  input_dataset$EducationField = as.factor(input_dataset$EducationField)
+  input_dataset$Gender = as.factor(input_dataset$Gender)
+  input_dataset$JobRole = as.factor(input_dataset$JobRole)
+  input_dataset$MaritalStatus = as.factor(input_dataset$MaritalStatus)
+  input_dataset$Over18 = as.factor(input_dataset$Over18)
+  input_dataset$OverTime = as.factor(input_dataset$OverTime)
+  
+  # Shorten Department Names by replacing the values 
+  
+  input_dataset$Department = str_replace(input_dataset$Department, "Research & Development", "RnD")
+  input_dataset$Department = str_replace(input_dataset$Department, "Human Resources", "HR")
+  
+  
+  # Change variables with 2 levels to 1 and 0 
+  input_dataset$Gender <- ifelse(input_dataset$Gender == "Female", 1, 0)
+  input_dataset$OverTime <- ifelse(input_dataset$OverTime == "Yes", 1, 0)
+  
+  # Remove Variables not needed in the model
+  input_dataset = input_dataset %>% select(-Over18)
+  input_dataset = input_dataset %>% select(-EmployeeCount)
+  input_dataset = input_dataset %>% select(-EmployeeNumber)
+  input_dataset = input_dataset %>% select(-ID)
+  input_dataset = input_dataset %>% select(-StandardHours)
+  input_dataset = input_dataset %>% select(-DailyRate)
+  input_dataset = input_dataset %>% select(-HourlyRate)
+  input_dataset = input_dataset %>% select(-MonthlyRate)
+  
+  
+  
+  # Scale numeric variables 
+  input_dataset[, c("Age","DistanceFromHome","Education","EnvironmentSatisfaction","JobInvolvement","JobLevel","JobSatisfaction","MonthlyIncome","NumCompaniesWorked","PercentSalaryHike","PerformanceRating","RelationshipSatisfaction","StockOptionLevel","TotalWorkingYears","TrainingTimesLastYear","WorkLifeBalance","YearsAtCompany","YearsInCurrentRole","YearsSinceLastPromotion","YearsWithCurrManager")] =  scale(input_dataset[, c("Age","DistanceFromHome","Education","EnvironmentSatisfaction","JobInvolvement","JobLevel","JobSatisfaction","MonthlyIncome","NumCompaniesWorked","PercentSalaryHike","PerformanceRating","RelationshipSatisfaction","StockOptionLevel","TotalWorkingYears","TrainingTimesLastYear","WorkLifeBalance","YearsAtCompany","YearsInCurrentRole","YearsSinceLastPromotion","YearsWithCurrManager")])
+  
+  
+  # Add feature names and replace spaces
+  
+  input_dataset$BusinessTravel = paste("BT_",str_replace(input_dataset$BusinessTravel," ","_"),sep="")
+  input_dataset$Department = paste("DP_",str_replace(input_dataset$Department," ","_"),sep="")
+  input_dataset$EducationField = paste("EF_",str_replace(input_dataset$EducationField," ","_"),sep="")
+  input_dataset$JobRole = paste("JR_",str_replace(input_dataset$JobRole," ","_"),sep="")
+  input_dataset$MaritalStatus =  paste("MS_",str_replace(input_dataset$MaritalStatus," ","_"),sep="")
+  
+  
+  # Dummy code categorical variables having 3 or more levels
+  BusinessTravel = as.data.frame(dummy.code(input_dataset$BusinessTravel))
+  Department = as.data.frame(dummy.code(input_dataset$Department))      
+  EducationField = as.data.frame(dummy.code(input_dataset$EducationField))
+  JobRole = as.data.frame(dummy.code(input_dataset$JobRole))
+  MaritalStatus = as.data.frame(dummy.code(input_dataset$MaritalStatus))
+  
+  
+  # Add the dummy codes to the dataset
+  input_dataset = cbind(input_dataset,BusinessTravel,Department,EducationField,JobRole,MaritalStatus)
+  
+  # Remove the original categorical variables 
+  input_dataset = input_dataset %>% select(-one_of(c("BusinessTravel", "Department", "EducationField","JobRole","MaritalStatus")))
+  
+  # Return the dataset
+  return(input_dataset)
+}
+```
+
+## Clean and make the datasets ready for KNN algorithm
+```{r}
+attrition_dataset = clean_wrangle_dataset(attrition_dataset,0)
+#Move outcome to the last column
+attrition_dataset$Outcome = attrition_dataset$Attrition
+attrition_dataset = attrition_dataset %>% select(-Attrition)
+
+attrition_dataset_wl = clean_wrangle_dataset(attrition_dataset_wl,1)
+
+
+```
+
+## Run KNN on training set to check specificity and sensitivity of the model 
+```{r}
+#set.seed(1243) # set the seed to make the partition reproducible
+
+# 80% of the sample size
+smp_size <- floor(0.8 * nrow(attrition_dataset))
+train_ind <- sample(seq_len(nrow(attrition_dataset)), size = smp_size)
+
+train_df <- attrition_dataset[train_ind, ]
+test_df <- attrition_dataset[-train_ind, ]
+# Use SMOTE to oversample the Attrition = Yes Observations
+
+train_df = SMOTE(Outcome~.,train_df,perc.over = 600,perc.under=100,k=10)
+prop.table(table(train_df$Outcome))
+
+classifications = knn(train_df[,c(1:46)], test_df[,c(1:46)], train_df$Outcome,prob = T,k=10)
+confusionMatrix(table(test_df$Outcome,classifications,dnn=c('Predicted','Actual')))
+```
+## Predict classifications on the test data set 
+```{r}
+# attrition_dataset_train = SMOTE(Outcome~.,attrition_dataset,perc.over = 600,perc.under=100,k=10)
+# classifications = knn(attrition_dataset_train[,c(1:46)], attrition_dataset_wl[,c(1:46)], attrition_dataset_train$Outcome,prob = F,k=5)
+# write.csv(x=classifications, file='D:\\SMU_MSDS\\MSDS_6306_Doing-Data-Science\\Unit 14 and 15 Case Study 2\\attrition_results.csv',row.names = F)
+```
+## Run linear regression
+```{r}
+attrition_dataset_lm$BusinessTravel = as.factor(attrition_dataset_lm$BusinessTravel)
+attrition_dataset_lm$Department =as.factor(attrition_dataset_lm$Department)
+attrition_dataset_lm$Gender = as.factor(attrition_dataset_lm$Gender)
+attrition_dataset_lm$JobRole = as.factor(attrition_dataset_lm$JobRole)
+attrition_dataset_lm$OverTime = as.factor(attrition_dataset_lm$OverTime)
+      
+model.full = lm(MonthlyIncome~Age+
+                BusinessTravel+
+                Department+
+                Education+
+                EducationField+
+                EnvironmentSatisfaction+
+                Gender+
+                JobInvolvement+
+                JobLevel+
+                JobRole+
+                JobSatisfaction+
+                NumCompaniesWorked+
+                OverTime+
+                PercentSalaryHike+
+                PerformanceRating+
+                RelationshipSatisfaction+
+                StockOptionLevel+
+                TotalWorkingYears+
+                TrainingTimesLastYear+
+                WorkLifeBalance+
+                YearsAtCompany+
+                YearsInCurrentRole+
+                YearsSinceLastPromotion+
+                YearsWithCurrManager,data=attrition_dataset_lm)
+      
+model.aic.backward <- step(model.full, direction = "backward", trace = 1)
+
+fit=lm(MonthlyIncome ~ BusinessTravel + Gender + JobLevel + JobRole + 
+  PercentSalaryHike + PerformanceRating + TotalWorkingYears + 
+  YearsSinceLastPromotion + YearsWithCurrManager,data=attrition_dataset_lm)
+summary(fit)
+par(mfrow=c(2,2))
+plot(fit)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
