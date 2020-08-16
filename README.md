@@ -7,16 +7,20 @@ Youtube Link ->
 
 ## Artifacts
 
-  CaseStudy2CompSet_No_Salary.csv -> Prediction File for Salary
+| File Name | Description |
+| --------- | ----------- |
+| CaseStudy2CompSet_No_Salary.csv | Prediction File for Salary |
+| Case_Study.pdf | R Markdown PDF Output |
+| casestudy.docx | R Markdown Word Output |
+| casestudy.html | R Markdown HTML Output |
+| casestudy.Rmd | R Markdown File |
+| CaseStudy2CompSet No Attrition.cs | Predition File for Attrition |
+| Attrition_Case_Study.pptx | Presentation |
 
-  Case_Study.pdf -> R Markdown PDF Output
+## Environment Information 
 
-  casestudy.docx -> R Markdown Word Output
+R version 4.0.0 (2020-04-24)
 
-  casestudy.html -> R Markdown HTML Output
+Platform: x86_64-w64-mingw32/x64 (64-bit)
 
-  casestudy.Rmd -> R Markdown File
-
-  CaseStudy2CompSet No Attrition.cs -> Predition File for Attrition
-
-  Attrition_Case_Study.pptx -> Presentation
+Running under: Windows 10 x64 (build 17134)
